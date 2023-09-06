@@ -1,6 +1,7 @@
 from os.path import join as joinpath
 import matplotlib.pyplot as plt
 import seaborn as sns
+from sklearn.metrics import classification_report
 from constants import IMG_SIZE, IMG_FILE_EXT
 
 
@@ -32,3 +33,53 @@ def save_figs(figs_dict, fig_dir, fig_file_ext=IMG_FILE_EXT):
     for filename, fig in figs_dict.items():
         filepath = joinpath(fig_dir, f'{filename}.{fig_file_ext}')
         fig.savefig(filepath)
+
+
+def _build_classification_report_image(y_train,
+                                       y_test,
+                                       y_train_preds,
+                                       y_test_preds,
+                                       model_name,
+                                       filepath):
+    """
+    Builds and saves classification report image.
+    input:
+            y_train: training response values
+            y_test:  test response values
+            y_train_preds: training predictions from generic model
+            y_test_preds_lr: test predictions from generic model
+            model_name: str (name of the model, e.g. 'Logistic Regression')
+            filepath: str
+
+    output:
+             None
+    """
+    fig = plt.figure(figsize=(5, 5))
+    # Classification report for train data
+    plt.text(0.01,
+             1.25,
+             f'{model_name} Train',
+             {'fontsize': 10},
+             fontproperties = 'monospace')
+    plt.text(0.01,
+             0.05,
+             str(classification_report(y_train, y_train_preds)),
+             {'fontsize': 10},
+             fontproperties = 'monospace')
+    # Classification report for test data
+    plt.text(0.01,
+             0.6,
+             f'{model_name} Test',
+             {'fontsize': 10},
+             fontproperties = 'monospace')
+    plt.text(0.01,
+             0.7,
+             str(classification_report(y_test, y_test_preds)),
+             {'fontsize': 10},
+             fontproperties = 'monospace')
+    plt.axis('off')
+    # Fit plot within figure
+    plt.tight_layout()
+    # Save figure to disk
+    fig = plt.gcf()
+    fig.savefig(filepath)

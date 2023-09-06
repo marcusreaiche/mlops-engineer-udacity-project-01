@@ -6,14 +6,18 @@ import os
 import logging
 import pandas as pd
 from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import classification_report
 from constants import (
     IMG_EDA_DIR,
+    IMG_RESULTS_DIR,
     CATEGORICAL_COLS,
     RESPONSE_COL,
     FEATURES_COLS)
 from helpers import (
     create_eda_figs,
-    save_figs)
+    save_figs,
+    _build_classification_report_image)
 
 
 os.environ['QT_QPA_PLATFORM'] = 'offscreen'
@@ -121,7 +125,22 @@ def classification_report_image(y_train,
     output:
              None
     '''
-    pass
+    # Logistic Regression
+    lr_filepath = os.path.join(IMG_RESULTS_DIR, 'logistic_results.png')
+    _build_classification_report_image(y_train,
+                                       y_test,
+                                       y_train_preds_lr,
+                                       y_test_preds_lr,
+                                       "Logistic Regression",
+                                       lr_filepath)
+    # Random Forest
+    rf_filepath = os.path.join(IMG_RESULTS_DIR, 'rf_results.png')
+    _build_classification_report_image(y_train,
+                                       y_test,
+                                       y_train_preds_rf,
+                                       y_test_preds_rf,
+                                       "Random Forest",
+                                       rf_filepath)
 
 
 def feature_importance_plot(model, X_data, output_pth):

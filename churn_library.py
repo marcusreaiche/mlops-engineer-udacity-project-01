@@ -5,7 +5,12 @@
 import os
 import logging
 import pandas as pd
-from constants import IMG_EDA_DIR
+from sklearn.model_selection import train_test_split
+from constants import (
+    IMG_EDA_DIR,
+    CATEGORICAL_COLS,
+    RESPONSE_COL,
+    FEATURES_COLS)
 from helpers import (
     create_eda_figs,
     save_figs)
@@ -56,7 +61,7 @@ def perform_eda(df):
     save_figs(figs_dict=figs_dict, fig_dir=IMG_EDA_DIR)
 
 
-def encoder_helper(df, category_lst, response='Churn'):
+def encoder_helper(df, category_lst, response=RESPONSE_COL):
     '''
     Helper function to turn each categorical column into a new column with
     proportion of churn for each category - associated with cell 16 from the notebook
@@ -75,7 +80,7 @@ def encoder_helper(df, category_lst, response='Churn'):
     return df
 
 
-def perform_feature_engineering(df, response):
+def perform_feature_engineering(df, response=RESPONSE_COL):
     '''
     input:
               df: pandas dataframe
@@ -87,6 +92,14 @@ def perform_feature_engineering(df, response):
               y_train: y training data
               y_test: y testing data
     '''
+    # Create encoded columns
+    encoder_helper(df, category_lst=CATEGORICAL_COLS, response=response)
+    # Set X and y
+    X = df.loc[:, FEATURES_COLS]
+    y = df[RESPONSE_COL]
+    # Split data into training and test sets
+    return train_test_split(X, y, test_size=0.3, random_state=42)
+
 
 def classification_report_image(y_train,
                                 y_test,
@@ -123,6 +136,7 @@ def feature_importance_plot(model, X_data, output_pth):
              None
     '''
     pass
+
 
 def train_models(X_train, X_test, y_train, y_test):
     '''

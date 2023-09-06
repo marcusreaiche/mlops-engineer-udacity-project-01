@@ -3,37 +3,62 @@
 
 # import libraries
 import os
-os.environ['QT_QPA_PLATFORM']='offscreen'
+import logging
+import pandas as pd
+from constants import IMG_EDA_DIR
+from helpers import (
+    create_eda_figs,
+    save_figs)
 
+
+os.environ['QT_QPA_PLATFORM'] = 'offscreen'
+logging.basicConfig(
+    level = logging.INFO,
+    format='%(name)s - %(levelname)s - %(message)s')
 
 
 def import_data(pth):
     '''
-    returns dataframe for the csv found at pth
+    Returns dataframe for the csv found at pth
 
     input:
             pth: a path to the csv
     output:
             df: pandas dataframe
-    '''	
-	pass
+    '''
+    return pd.read_csv(pth)
 
 
 def perform_eda(df):
     '''
-    perform eda on df and save figures to images folder
+    Perform eda on df and save figures to images folder
     input:
             df: pandas dataframe
 
     output:
             None
     '''
-	pass
+    # Perfom EDA
+    logging.info('df.head')
+    logging.info(df.head())
+    logging.info('df.shape')
+    logging.info(df.shape)
+    logging.info('Checking for nulls')
+    logging.info(df.isnull().sum())
+    logging.info('df.describe')
+    logging.info(df.describe())
+    # Create Churn col
+    df['Churn'] = (df['Attrition_Flag']
+                   .apply(lambda val: 0 if val == "Existing Customer" else 1))
+    # Create EDA figures
+    figs_dict = create_eda_figs(df)
+    # Save EDA figures
+    save_figs(figs_dict=figs_dict, fig_dir=IMG_EDA_DIR)
 
 
 def encoder_helper(df, category_lst, response):
     '''
-    helper function to turn each categorical column into a new column with
+    Helper function to turn each categorical column into a new column with
     propotion of churn for each category - associated with cell 15 from the notebook
 
     input:
@@ -67,7 +92,7 @@ def classification_report_image(y_train,
                                 y_test_preds_lr,
                                 y_test_preds_rf):
     '''
-    produces classification report for training and testing results and stores report as image
+    Produces classification report for training and testing results and stores report as image
     in images folder
     input:
             y_train: training response values
@@ -85,7 +110,7 @@ def classification_report_image(y_train,
 
 def feature_importance_plot(model, X_data, output_pth):
     '''
-    creates and stores the feature importances in pth
+    Creates and stores the feature importances in pth
     input:
             model: model object containing feature_importances_
             X_data: pandas dataframe of X values
@@ -98,7 +123,7 @@ def feature_importance_plot(model, X_data, output_pth):
 
 def train_models(X_train, X_test, y_train, y_test):
     '''
-    train, store model results: images + scores, and store models
+    Train, store model results: images + scores, and store models
     input:
               X_train: X training data
               X_test: X testing data

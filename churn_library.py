@@ -23,7 +23,8 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier
 from constants import (
     IMG_EDA_DIR,
-    IMG_RESULTS_DIR,
+    IMG_LRC_FILEPATH,
+    IMG_RFC_FILEPATH,
     CATEGORICAL_COLS,
     RESPONSE_COL,
     FEATURES_COLS,
@@ -154,21 +155,21 @@ def classification_report_image(y_train,
              None
     '''
     # Logistic Regression
-    lr_filepath = os.path.join(IMG_RESULTS_DIR, 'logistic_results.png')
-    _build_classification_report_image(y_train,
+    lrc_fig = _build_classification_report_image(y_train,
                                        y_test,
                                        y_train_preds_lr,
                                        y_test_preds_lr,
-                                       "Logistic Regression",
-                                       lr_filepath)
+                                       "Logistic Regression")
+    # Save figure to disk
+    lrc_fig.savefig(IMG_LRC_FILEPATH)
     # Random Forest
-    rf_filepath = os.path.join(IMG_RESULTS_DIR, 'rf_results.png')
-    _build_classification_report_image(y_train,
+    rfc_fig = _build_classification_report_image(y_train,
                                        y_test,
                                        y_train_preds_rf,
                                        y_test_preds_rf,
-                                       "Random Forest",
-                                       rf_filepath)
+                                       "Random Forest")
+    rfc_fig.savefig(IMG_RFC_FILEPATH)
+
 
 
 def feature_importance_plot(model, features, output_pth):

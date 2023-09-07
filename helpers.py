@@ -1,3 +1,11 @@
+"""
+Helpers functions module.
+
+Implement auxiliary functions used in other parts of the Project.
+
+Author: Marcus Reaiche
+Sep 7, 2023
+"""
 from os.path import join as joinpath
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -11,26 +19,26 @@ from constants import (
     ROC_CURVE_FILEPATH)
 
 
-def create_eda_figs(df, fig_size=IMG_EDA_SIZE):
+def create_eda_figs(data, fig_size=IMG_EDA_SIZE):
     """
     Helper function that creates EDA figures
     """
     figs_dict = {}
     # Churn hist
     figs_dict['churn_distribution'] = plt.figure(figsize=fig_size)
-    df['Churn'].hist()
+    data['Churn'].hist()
     # Customer_Age hist
     figs_dict['customer_age_distribution'] = plt.figure(figsize=fig_size)
-    df['Customer_Age'].hist()
+    data['Customer_Age'].hist()
     # Marital_Status bar plot
     figs_dict['marital_status_distribution'] = plt.figure(figsize=fig_size)
-    df.Marital_Status.value_counts('normalize').plot(kind='bar')
+    data.Marital_Status.value_counts('normalize').plot(kind='bar')
     # Total_Trans_Ct hist
     figs_dict['total_transaction_distribution'] = plt.figure(figsize=fig_size)
-    sns.histplot(df['Total_Trans_Ct'], stat='density', kde=True)
+    sns.histplot(data['Total_Trans_Ct'], stat='density', kde=True)
     # Correlation heatmap
     figs_dict['heatmap'] = plt.figure(figsize=fig_size)
-    sns.heatmap(df.corr(), annot=False, cmap='Dark2_r', linewidths = 2)
+    sns.heatmap(data.corr(), annot=False, cmap='Dark2_r', linewidths = 2)
     return figs_dict
 
 
@@ -45,10 +53,9 @@ def _build_classification_report_image(y_train,
                                        y_test,
                                        y_train_preds,
                                        y_test_preds,
-                                       model_name,
-                                       filepath):
+                                       model_name):
     """
-    Builds and saves classification report image.
+    Builds classification report image.
     input:
             y_train: training response values
             y_test:  test response values
@@ -58,7 +65,7 @@ def _build_classification_report_image(y_train,
             filepath: str
 
     output:
-             None
+             fig: matplotlib.figure.Figure
     """
     fig = plt.figure(figsize=IMG_CLASSIFICATION_REPORT_SIZE)
     # Classification report for train data
@@ -86,22 +93,20 @@ def _build_classification_report_image(y_train,
     plt.axis('off')
     # Fit plot within figure
     plt.tight_layout()
-    # Save figure to disk
-    fig.savefig(filepath)
-
+    return fig
 
 def generate_roc_curves(models_lst,
-                        X_test,
+                        x_test,
                         y_test,
                         filepath=ROC_CURVE_FILEPATH,
                         figsize=IMG_ROC_CURVES_SIZE):
     """
     Build and save ROC curves for list of models
     """
-    fig, ax = plt.subplots(figsize=figsize)
+    fig, axes = plt.subplots(figsize=figsize)
 
     for model in models_lst:
-        plot_roc_curve(model, X_test, y_test, ax=ax, alpha=0.8)
+        plot_roc_curve(model, x_test, y_test, ax=axes, alpha=0.8)
     fig.savefig(filepath)
 
 

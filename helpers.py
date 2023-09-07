@@ -2,6 +2,7 @@ from os.path import join as joinpath
 import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn.metrics import classification_report
+import joblib
 from constants import IMG_SIZE, IMG_FILE_EXT
 
 
@@ -81,5 +82,9 @@ def _build_classification_report_image(y_train,
     # Fit plot within figure
     plt.tight_layout()
     # Save figure to disk
-    fig = plt.gcf()
     fig.savefig(filepath)
+
+
+def save_model(model, filepath):
+    """Save model to disk"""
+    joblib.dump(model, filepath)

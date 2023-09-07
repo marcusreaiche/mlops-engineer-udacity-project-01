@@ -49,6 +49,7 @@ RFC_MODEL_FILEPATH = joinpath(MODELS_DIR, 'rfc_model.pkl')
 IMG_EDA_SIZE = (20, 10)
 IMG_ROC_CURVES_SIZE = (15, 8)
 IMG_CLASSIFICATION_REPORT_SIZE = (5, 5)
+IMG_FEATURE_IMPORTANCES_SIZE = (20, 5)
 IMG_FILE_EXT = 'png'
 
 # Train - Test - Split params

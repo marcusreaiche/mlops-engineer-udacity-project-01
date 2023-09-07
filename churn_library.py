@@ -23,7 +23,8 @@ from constants import (
     LRC_MODEL_FILEPATH,
     RFC_PARAM_GRID,
     RFC_CV,
-    RFC_MODEL_FILEPATH)
+    RFC_MODEL_FILEPATH,
+    FEATURE_IMPORTANCES_FILEPATH)
 from helpers import (
     create_eda_figs,
     save_figs,
@@ -229,3 +230,7 @@ def train_models(X_train, X_test, y_train, y_test):
                                 y_train_preds_rf,
                                 y_test_preds_lr,
                                 y_test_preds_rf)
+    # Generate feature importances plot
+    logging.info('Generate feature importances plot')
+    X = pd.concat([X_train, X_test])
+    feature_importance_plot(best_rfc, X, FEATURE_IMPORTANCES_FILEPATH)

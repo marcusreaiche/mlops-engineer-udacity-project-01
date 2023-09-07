@@ -1,3 +1,9 @@
+"""
+Module where constants used in the Project are set.
+
+Author: Marcus Reaiche
+Sep 7, 2023
+"""
 import os
 from os.path import join as joinpath
 
@@ -41,6 +47,8 @@ IMG_RESULTS_DIR = joinpath(IMG_DIR, 'results')
 ROC_CURVE_FILEPATH = joinpath(IMG_RESULTS_DIR, 'roc_curve_result.png')
 FEATURE_IMPORTANCES_FILEPATH = joinpath(IMG_RESULTS_DIR,
                                         'feature_importances.png')
+IMG_LRC_FILEPATH = joinpath(IMG_RESULTS_DIR, 'logistic_results.png')
+IMG_RFC_FILEPATH = joinpath(IMG_RESULTS_DIR, 'rf_results.png')
 MODELS_DIR = joinpath(CURR_FILE_DIR, 'models')
 LRC_MODEL_FILEPATH = joinpath(MODELS_DIR, 'logistic_model.pkl')
 RFC_MODEL_FILEPATH = joinpath(MODELS_DIR, 'rfc_model.pkl')

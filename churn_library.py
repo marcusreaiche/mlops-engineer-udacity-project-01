@@ -22,6 +22,7 @@ from sklearn.model_selection import train_test_split, GridSearchCV
 from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier
 from constants import (
+    DATA_FILEPATH,
     IMG_EDA_DIR,
     IMG_LRC_FILEPATH,
     IMG_RFC_FILEPATH,
@@ -46,9 +47,11 @@ from helpers import (
 
 
 os.environ['QT_QPA_PLATFORM'] = 'offscreen'
+# Logger basic config
+# - messages are logged to stdout
 logging.basicConfig(
     level = logging.INFO,
-    format='%(name)s - %(levelname)s - %(message)s')
+    format='%(name)s - %(asctime)s - %(levelname)s - %(message)s')
 
 
 def import_data(pth):
@@ -87,6 +90,7 @@ def perform_eda(data):
     # Create EDA figures
     figs_dict = create_eda_figs(data)
     # Save EDA figures
+    logging.info('Saving EDA figures to disk')
     save_figs(figs_dict=figs_dict, fig_dir=IMG_EDA_DIR)
 
 
@@ -248,3 +252,15 @@ def train_models(features_train, features_test, target_train, target_test):
     logging.info('Generate feature importances plot')
     features = pd.concat([features_train, features_test])
     feature_importance_plot(best_rfc, features, FEATURE_IMPORTANCES_FILEPATH)
+
+
+if __name__ == '__main__':
+    logging.info('Import data')
+    data = import_data(pth=DATA_FILEPATH)
+    logging.info('Perform EDA')
+    perform_eda(data)
+    logging.info('Perform feature engineering')
+    features_train, features_test, target_train, target_test = \
+        perform_feature_engineering(data)
+    logging.info('Training models and saving models and plots to disk')
+    train_models(features_train, features_test, target_train, target_test)

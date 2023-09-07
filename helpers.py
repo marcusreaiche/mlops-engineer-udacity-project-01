@@ -37,8 +37,11 @@ def create_eda_figs(data, fig_size=IMG_EDA_SIZE):
     figs_dict['total_transaction_distribution'] = plt.figure(figsize=fig_size)
     sns.histplot(data['Total_Trans_Ct'], stat='density', kde=True)
     # Correlation heatmap
-    figs_dict['heatmap'] = plt.figure(figsize=fig_size)
+    fig = plt.figure(figsize=fig_size)
     sns.heatmap(data.corr(), annot=False, cmap='Dark2_r', linewidths = 2)
+    # Ensure plot fits within figure
+    fig.tight_layout()
+    figs_dict['heatmap'] = fig
     return figs_dict
 
 
@@ -75,7 +78,7 @@ def _build_classification_report_image(y_train,
              {'fontsize': 10},
              fontproperties = 'monospace')
     plt.text(0.01,
-             0.05,
+             0.7,
              str(classification_report(y_train, y_train_preds)),
              {'fontsize': 10},
              fontproperties = 'monospace')
@@ -86,7 +89,7 @@ def _build_classification_report_image(y_train,
              {'fontsize': 10},
              fontproperties = 'monospace')
     plt.text(0.01,
-             0.7,
+             0.05,
              str(classification_report(y_test, y_test_preds)),
              {'fontsize': 10},
              fontproperties = 'monospace')
@@ -94,6 +97,7 @@ def _build_classification_report_image(y_train,
     # Fit plot within figure
     plt.tight_layout()
     return fig
+
 
 def generate_roc_curves(models_lst,
                         x_test,

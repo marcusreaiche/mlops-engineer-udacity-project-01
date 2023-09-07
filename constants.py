@@ -41,6 +41,8 @@ RESPONSE_COL = 'Churn'
 
 # Directory and file paths
 CURR_FILE_DIR = os.path.dirname(__file__)
+DATA_DIR = joinpath(CURR_FILE_DIR, 'data')
+DATA_FILEPATH = joinpath(DATA_DIR, 'bank_data.csv')
 IMG_DIR = joinpath(CURR_FILE_DIR, 'images')
 IMG_EDA_DIR = joinpath(IMG_DIR, 'eda')
 IMG_RESULTS_DIR = joinpath(IMG_DIR, 'results')

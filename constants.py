@@ -1,3 +1,9 @@
+"""
+Module where constants used in the Project are set.
+
+Author: Marcus Reaiche
+Sep 7, 2023
+"""
 import os
 from os.path import join as joinpath
 

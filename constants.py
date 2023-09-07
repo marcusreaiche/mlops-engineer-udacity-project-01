@@ -49,6 +49,10 @@ IMG_ROC_CURVES_SIZE = (15, 8)
 IMG_CLASSIFICATION_REPORT_SIZE = (5, 5)
 IMG_FILE_EXT = 'png'
 
+# Train - Test - Split params
+RANDOM_STATE = 42
+TEST_SIZE = 0.3
+
 # Grid Search Hyperparameters for Random Forest
 RFC_PARAM_GRID = {
     'n_estimators': [200, 500],

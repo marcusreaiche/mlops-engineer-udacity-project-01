@@ -5,10 +5,11 @@
 import os
 import logging
 import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split, GridSearchCV
 from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import classification_report
 from constants import (
     IMG_EDA_DIR,
     IMG_RESULTS_DIR,
@@ -22,7 +23,8 @@ from constants import (
     LRC_MODEL_FILEPATH,
     RFC_PARAM_GRID,
     RFC_CV,
-    RFC_MODEL_FILEPATH)
+    RFC_MODEL_FILEPATH,
+    FEATURE_IMPORTANCES_FILEPATH)
 from helpers import (
     create_eda_figs,
     save_figs,
@@ -167,7 +169,25 @@ def feature_importance_plot(model, X_data, output_pth):
     output:
              None
     '''
-    pass
+    # Calculate feature importances
+    importances = model.feature_importances_
+    # Sort feature importances in descending order
+    indices = np.argsort(importances)[::-1]
+    # Rearrange feature names so they match the sorted feature importances
+    names = X_data.columns[indices].to_list()
+    # Create plot
+    fig = plt.figure(figsize=(20,5))
+    # Create plot title
+    plt.title("Feature Importance")
+    plt.ylabel('Importance')
+    # Add bars
+    plt.bar(range(X_data.shape[1]), importances[indices])
+    # Add feature names as x-axis labels
+    plt.xticks(range(X_data.shape[1]), names, rotation=90)
+    # Ensure plot is within figure
+    plt.tight_layout()
+    # Save figure to disk
+    fig.savefig(output_pth)
 
 
 def train_models(X_train, X_test, y_train, y_test):
@@ -210,3 +230,7 @@ def train_models(X_train, X_test, y_train, y_test):
                                 y_train_preds_rf,
                                 y_test_preds_lr,
                                 y_test_preds_rf)
+    # Generate feature importances plot
+    logging.info('Generate feature importances plot')
+    X = pd.concat([X_train, X_test])
+    feature_importance_plot(best_rfc, X, FEATURE_IMPORTANCES_FILEPATH)

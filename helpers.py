@@ -37,8 +37,11 @@ def create_eda_figs(data, fig_size=IMG_EDA_SIZE):
     figs_dict['total_transaction_distribution'] = plt.figure(figsize=fig_size)
     sns.histplot(data['Total_Trans_Ct'], stat='density', kde=True)
     # Correlation heatmap
-    figs_dict['heatmap'] = plt.figure(figsize=fig_size)
+    fig = plt.figure(figsize=fig_size)
     sns.heatmap(data.corr(), annot=False, cmap='Dark2_r', linewidths = 2)
+    # Ensure plot fits within figure
+    fig.tight_layout()
+    figs_dict['heatmap'] = fig
     return figs_dict
 
 

@@ -1,12 +1,17 @@
 from os.path import join as joinpath
 import matplotlib.pyplot as plt
 import seaborn as sns
-from sklearn.metrics import classification_report
+from sklearn.metrics import classification_report, plot_roc_curve
 import joblib
-from constants import IMG_SIZE, IMG_FILE_EXT
+from constants import (
+    IMG_EDA_SIZE,
+    IMG_FILE_EXT,
+    IMG_ROC_CURVES_SIZE,
+    IMG_CLASSIFICATION_REPORT_SIZE,
+    ROC_CURVE_FILEPATH)
 
 
-def create_eda_figs(df, fig_size=IMG_SIZE):
+def create_eda_figs(df, fig_size=IMG_EDA_SIZE):
     """
     Helper function that creates EDA figures
     """
@@ -55,7 +60,7 @@ def _build_classification_report_image(y_train,
     output:
              None
     """
-    fig = plt.figure(figsize=(5, 5))
+    fig = plt.figure(figsize=IMG_CLASSIFICATION_REPORT_SIZE)
     # Classification report for train data
     plt.text(0.01,
              1.25,
@@ -82,6 +87,21 @@ def _build_classification_report_image(y_train,
     # Fit plot within figure
     plt.tight_layout()
     # Save figure to disk
+    fig.savefig(filepath)
+
+
+def generate_roc_curves(models_lst,
+                        X_test,
+                        y_test,
+                        filepath=ROC_CURVE_FILEPATH,
+                        figsize=IMG_ROC_CURVES_SIZE):
+    """
+    Build and save ROC curves for list of models
+    """
+    fig, ax = plt.subplots(figsize=figsize)
+
+    for model in models_lst:
+        plot_roc_curve(model, X_test, y_test, ax=ax, alpha=0.8)
     fig.savefig(filepath)
 
 

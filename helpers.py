@@ -78,7 +78,7 @@ def _build_classification_report_image(y_train,
              {'fontsize': 10},
              fontproperties = 'monospace')
     plt.text(0.01,
-             0.05,
+             0.7,
              str(classification_report(y_train, y_train_preds)),
              {'fontsize': 10},
              fontproperties = 'monospace')
@@ -89,7 +89,7 @@ def _build_classification_report_image(y_train,
              {'fontsize': 10},
              fontproperties = 'monospace')
     plt.text(0.01,
-             0.7,
+             0.05,
              str(classification_report(y_test, y_test_preds)),
              {'fontsize': 10},
              fontproperties = 'monospace')
@@ -97,6 +97,7 @@ def _build_classification_report_image(y_train,
     # Fit plot within figure
     plt.tight_layout()
     return fig
+
 
 def generate_roc_curves(models_lst,
                         x_test,

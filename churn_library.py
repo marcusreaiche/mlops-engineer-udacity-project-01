@@ -51,7 +51,7 @@ os.environ['QT_QPA_PLATFORM'] = 'offscreen'
 # - messages are logged to stdout
 logging.basicConfig(
     level = logging.INFO,
-    format='%(name)s - %(levelname)s - %(message)s')
+    format='%(name)s - %(asctime)s - %(levelname)s - %(message)s')
 
 
 def import_data(pth):

@@ -38,16 +38,15 @@ CURR_FILE_DIR = os.path.dirname(__file__)
 IMG_DIR = joinpath(CURR_FILE_DIR, 'images')
 IMG_EDA_DIR = joinpath(IMG_DIR, 'eda')
 IMG_RESULTS_DIR = joinpath(IMG_DIR, 'results')
+ROC_CURVE_FILEPATH = joinpath(IMG_RESULTS_DIR, 'roc_curve_result.png')
 MODELS_DIR = joinpath(CURR_FILE_DIR, 'models')
 LRC_MODEL_FILEPATH = joinpath(MODELS_DIR, 'logistic_model.pkl')
 RFC_MODEL_FILEPATH = joinpath(MODELS_DIR, 'rfc_model.pkl')
-ROC_CURVE_FILEPATH = joinpath(MODELS_DIR, 'roc_curve_result.png')
 
 # Images constants
 IMG_EDA_SIZE = (20, 10)
 IMG_ROC_CURVES_SIZE = (15, 8)
 IMG_CLASSIFICATION_REPORT_SIZE = (5, 5)
-
 IMG_FILE_EXT = 'png'
 
 # Grid Search Hyperparameters for Random Forest

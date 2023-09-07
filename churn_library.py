@@ -5,15 +5,30 @@
 import os
 import logging
 import pandas as pd
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import train_test_split, GridSearchCV
+from sklearn.linear_model import LogisticRegression
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import classification_report
 from constants import (
     IMG_EDA_DIR,
+    IMG_RESULTS_DIR,
     CATEGORICAL_COLS,
     RESPONSE_COL,
-    FEATURES_COLS)
+    FEATURES_COLS,
+    RANDOM_STATE,
+    TEST_SIZE,
+    LRC_SOLVER,
+    LRC_MAX_ITER,
+    LRC_MODEL_FILEPATH,
+    RFC_PARAM_GRID,
+    RFC_CV,
+    RFC_MODEL_FILEPATH)
 from helpers import (
     create_eda_figs,
-    save_figs)
+    save_figs,
+    _build_classification_report_image,
+    generate_roc_curves,
+    save_model)
 
 
 os.environ['QT_QPA_PLATFORM'] = 'offscreen'
@@ -98,7 +113,9 @@ def perform_feature_engineering(df, response=RESPONSE_COL):
     X = df.loc[:, FEATURES_COLS]
     y = df[RESPONSE_COL]
     # Split data into training and test sets
-    return train_test_split(X, y, test_size=0.3, random_state=42)
+    return train_test_split(X, y,
+                            test_size=TEST_SIZE,
+                            random_state=RANDOM_STATE)
 
 
 def classification_report_image(y_train,
@@ -121,7 +138,22 @@ def classification_report_image(y_train,
     output:
              None
     '''
-    pass
+    # Logistic Regression
+    lr_filepath = os.path.join(IMG_RESULTS_DIR, 'logistic_results.png')
+    _build_classification_report_image(y_train,
+                                       y_test,
+                                       y_train_preds_lr,
+                                       y_test_preds_lr,
+                                       "Logistic Regression",
+                                       lr_filepath)
+    # Random Forest
+    rf_filepath = os.path.join(IMG_RESULTS_DIR, 'rf_results.png')
+    _build_classification_report_image(y_train,
+                                       y_test,
+                                       y_train_preds_rf,
+                                       y_test_preds_rf,
+                                       "Random Forest",
+                                       rf_filepath)
 
 
 def feature_importance_plot(model, X_data, output_pth):
@@ -149,4 +181,32 @@ def train_models(X_train, X_test, y_train, y_test):
     output:
               None
     '''
-    pass
+    # Logistic regression model
+    logging.info('Train LogisticRegressionClassifier')
+    lrc = LogisticRegression(solver=LRC_SOLVER, max_iter=LRC_MAX_ITER)
+    lrc.fit(X_train, y_train)
+    y_train_preds_lr = lrc.predict(X_train)
+    y_test_preds_lr = lrc.predict(X_test)
+    # Random Forest model
+    logging.info('Train RandomForestClassifier (GridSearch)')
+    rfc = RandomForestClassifier(random_state=RANDOM_STATE)
+    cv_rfc = GridSearchCV(estimator=rfc, param_grid=RFC_PARAM_GRID, cv=RFC_CV)
+    cv_rfc.fit(X_train, y_train)
+    best_rfc = cv_rfc.best_estimator_
+    y_train_preds_rf = best_rfc.predict(X_train)
+    y_test_preds_rf = best_rfc.predict(X_test)
+    # Save models to disk
+    logging.info('Save models to disk')
+    save_model(lrc, LRC_MODEL_FILEPATH)
+    save_model(best_rfc, RFC_MODEL_FILEPATH)
+    # Generate ROC curves
+    logging.info('Generate ROC curves')
+    generate_roc_curves([best_rfc, lrc], X_test, y_test)
+    # Generate classification reports images
+    logging.info('Generate classification report images')
+    classification_report_image(y_train,
+                                y_test,
+                                y_train_preds_lr,
+                                y_train_preds_rf,
+                                y_test_preds_lr,
+                                y_test_preds_rf)

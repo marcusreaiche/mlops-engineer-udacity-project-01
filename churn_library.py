@@ -51,7 +51,7 @@ os.environ['QT_QPA_PLATFORM'] = 'offscreen'
 logging.basicConfig(
     level = logging.INFO,
     format='%(name)s - %(asctime)s - %(levelname)s - %(message)s')
-
+logger = logging.getLogger(__name__ + '_logger')
 
 def import_data(pth):
     '''
@@ -75,21 +75,21 @@ def perform_eda(data):
             None
     '''
     # Perfom EDA
-    logging.info('data.head')
-    logging.info(data.head())
-    logging.info('data.shape')
-    logging.info(data.shape)
-    logging.info('Checking for nulls')
-    logging.info(data.isnull().sum())
-    logging.info('data.describe')
-    logging.info(data.describe())
+    logger.info('data.head')
+    logger.info(data.head())
+    logger.info('data.shape')
+    logger.info(data.shape)
+    logger.info('Checking for nulls')
+    logger.info(data.isnull().sum())
+    logger.info('data.describe')
+    logger.info(data.describe())
     # Create Churn col
     data['Churn'] = (data['Attrition_Flag']
                    .apply(lambda val: 0 if val == "Existing Customer" else 1))
     # Create EDA figures
     figs_dict = create_eda_figs(data)
     # Save EDA figures
-    logging.info('Saving EDA figures to disk')
+    logger.info('Saving EDA figures to disk')
     save_figs(figs_dict=figs_dict, fig_dir=IMG_EDA_DIR)
 
 
@@ -223,13 +223,13 @@ def train_models(features_train, features_test, target_train, target_test):
               None
     '''
     # Logistic regression model
-    logging.info('Train LogisticRegressionClassifier')
+    logger.info('Train LogisticRegressionClassifier')
     lrc = LogisticRegression(solver=LRC_SOLVER, max_iter=LRC_MAX_ITER)
     lrc.fit(features_train, target_train)
     y_train_preds_lr = lrc.predict(features_train)
     y_test_preds_lr = lrc.predict(features_test)
     # Random Forest model
-    logging.info('Train RandomForestClassifier (GridSearch)')
+    logger.info('Train RandomForestClassifier (GridSearch)')
     rfc = RandomForestClassifier(random_state=RANDOM_STATE)
     cv_rfc = GridSearchCV(estimator=rfc, param_grid=RFC_PARAM_GRID, cv=RFC_CV)
     cv_rfc.fit(features_train, target_train)
@@ -237,17 +237,17 @@ def train_models(features_train, features_test, target_train, target_test):
     y_train_preds_rf = best_rfc.predict(features_train)
     y_test_preds_rf = best_rfc.predict(features_test)
     # Save models to disk
-    logging.info('Save models to disk')
+    logger.info('Save models to disk')
     save_model(lrc, LRC_MODEL_FILEPATH)
     save_model(best_rfc, RFC_MODEL_FILEPATH)
     # Generate ROC curves
-    logging.info('Generate ROC curves')
+    logger.info('Generate ROC curves')
     generate_roc_curves([best_rfc, lrc],
                         features_test,
                         target_test,
                         ROC_CURVE_FILEPATH)
     # Generate classification reports images
-    logging.info('Generate classification report images')
+    logger.info('Generate classification report images')
     classification_report_image(target_train,
                                 target_test,
                                 y_train_preds_lr,
@@ -255,18 +255,18 @@ def train_models(features_train, features_test, target_train, target_test):
                                 y_test_preds_lr,
                                 y_test_preds_rf)
     # Generate feature importances plot
-    logging.info('Generate feature importances plot')
+    logger.info('Generate feature importances plot')
     features = pd.concat([features_train, features_test])
     feature_importance_plot(best_rfc, features, FEATURE_IMPORTANCES_FILEPATH)
 
 
 if __name__ == '__main__':
-    logging.info('Import data')
+    logger.info('Import data')
     data_df = import_data(pth=DATA_FILEPATH)
-    logging.info('Perform EDA')
+    logger.info('Perform EDA')
     perform_eda(data_df)
-    logging.info('Perform feature engineering')
+    logger.info('Perform feature engineering')
     x_train, x_test, response_train, response_test = \
         perform_feature_engineering(data_df)
-    logging.info('Training models and saving models and plots to disk')
+    logger.info('Training models and saving models and plots to disk')
     train_models(x_train, x_test, response_train, response_test)

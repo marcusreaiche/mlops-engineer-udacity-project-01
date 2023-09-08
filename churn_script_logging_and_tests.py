@@ -12,7 +12,7 @@ import joblib
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier
-from file_logger import file_logger
+from test_logger import test_logger as logger
 from constants import (
     DATA_FILEPATH,
     IMG_FILE_EXT,
@@ -93,11 +93,11 @@ def test_import_data(data_path):
     '''
     Test import data
     '''
-    file_logger.info("Testing import_data: START")
+    logger.info("Testing import_data: START")
     try:
         data = import_data(data_path)
     except FileNotFoundError as err:
-        file_logger.error("Testing import_data: The file wasn't found")
+        logger.error("Testing import_data: The file wasn't found")
         raise err
 
     try:
@@ -106,16 +106,16 @@ def test_import_data(data_path):
     except AssertionError as err:
         log_msg = ("Testing import_data:" +
                    " The file doesn't appear to have rows and columns")
-        file_logger.error(log_msg)
+        logger.error(log_msg)
         raise err
-    file_logger.info("Testing import_data: SUCCESS")
+    logger.info("Testing import_data: SUCCESS")
 
 
 def test_perform_eda(data_before_eda, tmp_path, monkeypatch):
     '''
     Test perform_eda function
     '''
-    file_logger.info('Testing perform_eda - START')
+    logger.info('Testing perform_eda - START')
     # Set temporary directory to save EDA files
     tmp_images_eda_directory = tmp_path / 'images' / 'eda'
     tmp_images_eda_directory.mkdir(parents=True)
@@ -124,16 +124,16 @@ def test_perform_eda(data_before_eda, tmp_path, monkeypatch):
         perform_eda(data_before_eda)
         # Test that 'Churn' columns was created
         assert 'Churn' in data_before_eda
-        file_logger.info('"Churn" column was created')
+        logger.info('"Churn" column was created')
     except AssertionError as err:
-        file_logger.error('"Churn" column was not created')
+        logger.error('"Churn" column was not created')
         raise err
     try:
         # Test that 'Churn' column has only zeros and ones
         assert set(data_before_eda.Churn.value_counts().index).issubset({0, 1})
-        file_logger.info('"Churn" column has only 0\'s and 1\'s')
+        logger.info('"Churn" column has only 0\'s and 1\'s')
     except AssertionError as err:
-        file_logger.error('"Churn" column has values not in {0, 1}')
+        logger.error('"Churn" column has values not in {0, 1}')
         raise err
     try:
         # Check that the five images were saved in the temporary directory
@@ -147,35 +147,35 @@ def test_perform_eda(data_before_eda, tmp_path, monkeypatch):
             file for file in os.listdir(tmp_images_eda_directory)
             if file.endswith(IMG_FILE_EXT)}
         assert saved_images == expected_images
-        file_logger.info('Expected image files were saved to disk')
+        logger.info('Expected image files were saved to disk')
     except AssertionError as err:
-        file_logger.error('Saved image files do not agree with expected images')
+        logger.error('Saved image files do not agree with expected images')
         raise err
-    file_logger.info('Testing perform_eda - SUCCESS')
+    logger.info('Testing perform_eda - SUCCESS')
 
 
 def test_encoder_helper(data_after_eda):
     '''
     Test encoder helper
     '''
-    file_logger.info('Test encoder_helper - START')
+    logger.info('Test encoder_helper - START')
     try:
         data = encoder_helper(data_after_eda, CATEGORICAL_COLS)
         expected_cols = [col + '_' + RESPONSE_COL for col in CATEGORICAL_COLS]
         assert set(expected_cols).issubset(data.columns)
         log_msg = f'Categorical cols {expected_cols} were created'
-        file_logger.info(log_msg)
+        logger.info(log_msg)
     except AssertionError as err:
-        file_logger.error('Some categorical cols were not created')
+        logger.error('Some categorical cols were not created')
         raise err
-    file_logger.info('Test encoder_helper - SUCCESS')
+    logger.info('Test encoder_helper - SUCCESS')
 
 
 def test_perform_feature_engineering(data_after_eda, data_split):
     '''
     Test perform_feature_engineering
     '''
-    file_logger.info('Testing perform_feature_engineering - START')
+    logger.info('Testing perform_feature_engineering - START')
     try:
         x_train, x_test, y_train, y_test = \
             perform_feature_engineering(data_after_eda)
@@ -184,16 +184,16 @@ def test_perform_feature_engineering(data_after_eda, data_split):
                 y_train.equals(data_split["y_train"]) and
                 y_test.equals(data_split["y_test"]))
     except AssertionError as err:
-        file_logger.error('Split data do not agree')
+        logger.error('Split data do not agree')
         raise err
-    file_logger.info('Test perform_feature_engineering - SUCCESS')
+    logger.info('Test perform_feature_engineering - SUCCESS')
 
 
 def test_train_models(data_split, tmp_path, monkeypatch):
     '''
     Test train_models
     '''
-    file_logger.info('Testing train_models - START')
+    logger.info('Testing train_models - START')
     # Set temporary paths to save models
     tmp_models_directory = tmp_path / 'models'
     tmp_lrc_model_filepath = tmp_models_directory / 'logistic_model.pkl'
@@ -245,9 +245,9 @@ def test_train_models(data_split, tmp_path, monkeypatch):
                        if file.endswith('.pkl')}
         expected_model_files = {'logistic_model.pkl', 'rfc_model.pkl'}
         assert model_files == expected_model_files
-        file_logger.info('Model files - OKAY')
+        logger.info('Model files - OKAY')
     except AssertionError as err:
-        file_logger.error('Model files do not agree with expected results')
+        logger.error('Model files do not agree with expected results')
         raise err
 
     try:
@@ -260,9 +260,9 @@ def test_train_models(data_split, tmp_path, monkeypatch):
         with open(tmp_rfc_model_filepath, 'rb') as file:
             rfc_model = joblib.load(file)
         assert isinstance(rfc_model, RandomForestClassifier)
-        file_logger.info('Models instances - OKAY')
+        logger.info('Models instances - OKAY')
     except AssertionError as err:
-        file_logger.error('Models instances are of unexpected class')
+        logger.error('Models instances are of unexpected class')
         raise err
 
     try:
@@ -277,11 +277,11 @@ def test_train_models(data_split, tmp_path, monkeypatch):
             file for file in os.listdir(tmp_results_directory)
             if file.endswith(IMG_FILE_EXT)}
         assert expected_img_in_results_directory == imgs_in_results_directory
-        file_logger.info('Images in images/results - OKAY')
+        logger.info('Images in images/results - OKAY')
     except AssertionError as err:
-        file_logger.error('Unexpected images in results')
+        logger.error('Unexpected images in results')
         raise err
-    file_logger.info("Testing train_models - SUCCESS")
+    logger.info("Testing train_models - SUCCESS")
 
 
 if __name__ == "__main__":

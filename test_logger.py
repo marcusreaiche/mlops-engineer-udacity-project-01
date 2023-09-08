@@ -11,4 +11,4 @@ logging.basicConfig(
     level = logging.INFO,
     filemode='w',
     format='%(name)s - %(levelname)s - %(message)s')
-file_logger = logging.getLogger(__name__)
+test_logger = logging.getLogger(__name__)

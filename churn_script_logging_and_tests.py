@@ -1,63 +1,130 @@
 import os
-import logging
-import churn_library_solution as cls
+import numpy as np
+import pytest
+from file_logger import file_logger
+from constants import (
+    DATA_FILEPATH,
+    IMG_FILE_EXT,
+    CATEGORICAL_COLS,
+    RESPONSE_COL)
+import churn_library
+from churn_library import (
+    import_data,
+    perform_eda,
+    perform_feature_engineering,
+    encoder_helper,
+    train_models)
 
-logging.basicConfig(
-    filename='./logs/churn_library.log',
-    level = logging.INFO,
-    filemode='w',
-    format='%(name)s - %(levelname)s - %(message)s')
+# Pytest fixtures
+@pytest.fixture(scope='module')
+def data_path():
+    return DATA_FILEPATH
 
-def test_import(import_data):
-	'''
-	test data import - this example is completed for you to assist with the other test functions
-	'''
-	try:
-		df = import_data("./data/bank_data.csv")
-		logging.info("Testing import_data: SUCCESS")
-	except FileNotFoundError as err:
-		logging.error("Testing import_eda: The file wasn't found")
-		raise err
+@pytest.fixture(scope='module')
+def data_before_eda(data_path):
+    return import_data(data_path)
 
-	try:
-		assert df.shape[0] > 0
-		assert df.shape[1] > 0
-	except AssertionError as err:
-		logging.error("Testing import_data: The file doesn't appear to have rows and columns")
-		raise err
+@pytest.fixture(scope='module')
+def data_after_eda(data_before_eda):
+    return (
+        data_before_eda
+        .assign(Churn=lambda df: np.where(
+            df.Attrition_Flag == 'Existing Customer',
+            0,
+            1)))
+
+def test_import_data(data_path):
+    '''
+    Test import data
+    '''
+    file_logger.info("Testing import_data: START")
+    try:
+        data = import_data(data_path)
+    except FileNotFoundError as err:
+        file_logger.error("Testing import_data: The file wasn't found")
+        raise err
+
+    try:
+        assert data.shape[0] > 0
+        assert data.shape[1] > 0
+    except AssertionError as err:
+        file_logger.error("Testing import_data:" +
+                          " The file doesn't appear to have rows and columns")
+        raise err
+    file_logger.info("Testing import_data: SUCCESS")
+
+def test_perform_eda(data_before_eda, tmp_path, monkeypatch):
+    '''
+    Test perform_eda function
+    '''
+    file_logger.info('Testing perform_eda - START')
+    # Set temporary directory to save EDA files
+    tmp_images_eda_directory = tmp_path / 'images' / 'eda'
+    tmp_images_eda_directory.mkdir(parents=True)
+    monkeypatch.setattr(churn_library, "IMG_EDA_DIR", tmp_images_eda_directory)
+    try:
+        perform_eda(data_before_eda)
+        # Test that 'Churn' columns was created
+        assert 'Churn' in data_before_eda
+        file_logger.info('"Churn" column was created')
+    except AssertionError as err:
+        file_logger.error('"Churn" column was not created')
+        raise err
+    try:
+        # Test that 'Churn' column has only zeros and ones
+        assert set(data_before_eda.Churn.value_counts().index).issubset({0, 1})
+        file_logger.info('"Churn" column has only 0\'s and 1\'s')
+    except AssertionError as err:
+        file_logger.error('"Churn" column has values not in {0, 1}')
+        raise err
+    try:
+        # Check that the five images were saved in the temporary directory
+        expected_images = set([
+            'total_transaction_distribution.png',
+            'customer_age_distribution.png',
+            'churn_distribution.png',
+            'marital_status_distribution.png',
+            'heatmap.png'])
+        saved_images = set([
+            file for file in os.listdir(tmp_images_eda_directory)
+            if file.endswith(IMG_FILE_EXT)])
+        assert saved_images == expected_images
+        file_logger.info('Expected image files were saved to disk')
+    except AssertionError as err:
+        file_logger.error('Saved image files do not agree with expected images')
+        raise err
+    file_logger.info('Testing perform_eda - SUCCESS')
 
 
-def test_eda(perform_eda):
-	'''
-	test perform eda function
-	'''
+def test_encoder_helper(data_after_eda):
+    '''
+    Test encoder helper
+    '''
+    file_logger.info('Test encoder_helper - START')
+    try:
+        data_encoded = encoder_helper(data_after_eda, CATEGORICAL_COLS)
+        expected_cols = [col + '_' + RESPONSE_COL for col in CATEGORICAL_COLS]
+        assert set(expected_cols).issubset(data_encoded.columns)
+        file_logger.info(f'Categorical cols {expected_cols} were created')
+    except AssertionError as err:
+        file_logger.error('Some categorical cols were not created')
+        raise err
+    file_logger.info('Test encoder_helper - SUCCESS')
 
 
-def test_encoder_helper(encoder_helper):
-	'''
-	test encoder helper
-	'''
+def test_perform_feature_engineering():
+    '''
+    Test perform_feature_engineering
+    '''
+    raise NotImplementedError('Implement test_perform_feature_engineering')
 
 
-def test_perform_feature_engineering(perform_feature_engineering):
-	'''
-	test perform_feature_engineering
-	'''
-
-
-def test_train_models(train_models):
-	'''
-	test train_models
-	'''
+def test_train_models():
+    '''
+    Test train_models
+    '''
+    raise NotImplementedError('Implement test_train_models')
 
 
 if __name__ == "__main__":
-	pass
-
-
-
-
-
-
-
-
+    pytest.main([__file__])

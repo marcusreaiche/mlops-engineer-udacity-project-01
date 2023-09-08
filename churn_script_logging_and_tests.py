@@ -1,7 +1,10 @@
 import os
 import numpy as np
 import pytest
+import joblib
 from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LogisticRegression
+from sklearn.ensemble import RandomForestClassifier
 from file_logger import file_logger
 from constants import (
     DATA_FILEPATH,
@@ -55,6 +58,18 @@ def features(data_encoded):
 @pytest.fixture(scope='module')
 def target(data_encoded):
     return data_encoded.loc[:, RESPONSE_COL]
+
+
+@pytest.fixture(scope='module')
+def data_split(features, target):
+    x_train, x_test, y_train, y_test = \
+            train_test_split(features, target,
+                             test_size=TEST_SIZE,
+                             random_state=RANDOM_STATE)
+    return dict(x_train=x_train,
+                x_test=x_test,
+                y_train=y_train,
+                y_test=y_test)
 
 
 def test_import_data(data_path):
@@ -137,7 +152,7 @@ def test_encoder_helper(data_after_eda):
     file_logger.info('Test encoder_helper - SUCCESS')
 
 
-def test_perform_feature_engineering(data_after_eda, features, target):
+def test_perform_feature_engineering(data_after_eda, data_split):
     '''
     Test perform_feature_engineering
     '''
@@ -145,25 +160,109 @@ def test_perform_feature_engineering(data_after_eda, features, target):
     try:
         x_train, x_test, y_train, y_test = \
             perform_feature_engineering(data_after_eda)
-        x_train_expected, x_test_expected, y_train_expected, y_test_expected = \
-            train_test_split(features, target,
-                             test_size=TEST_SIZE,
-                             random_state=RANDOM_STATE)
-        assert (x_train.equals(x_train_expected) and
-                x_test.equals(x_test_expected) and
-                y_train.equals(y_train_expected) and
-                y_test.equals(y_test_expected))
+        assert (x_train.equals(data_split["x_train"]) and
+                x_test.equals(data_split["x_test"]) and
+                y_train.equals(data_split["y_train"]) and
+                y_test.equals(data_split["y_test"]))
     except AssertionError as err:
         file_logger.error('Split data do not agree')
         raise err
     file_logger.info('Test perform_feature_engineering - SUCCESS')
 
 
-def test_train_models():
+def test_train_models(data_split, tmp_path, monkeypatch):
     '''
     Test train_models
     '''
-    raise NotImplementedError('Implement test_train_models')
+    file_logger.info('Testing train_models - START')
+    # Set temporary paths to save models
+    tmp_models_directory = tmp_path / 'models'
+    tmp_lrc_model_filepath = tmp_models_directory / 'logistic_model.pkl'
+    tmp_rfc_model_filepath = tmp_models_directory / 'rfc_model.pkl'
+    tmp_models_directory.mkdir(parents=True)
+    # Use monkeypatch to reset global variables during testing
+    monkeypatch.setattr(churn_library,
+                        "LRC_MODEL_FILEPATH",
+                        tmp_lrc_model_filepath)
+    monkeypatch.setattr(churn_library,
+                        "RFC_MODEL_FILEPATH",
+                        tmp_rfc_model_filepath)
+
+    # Set temporary results directory
+    tmp_results_directory = tmp_path / 'images' / 'results'
+    tmp_roc_curve_filepath = tmp_results_directory / 'roc_curve_result.png'
+    tmp_img_lrc_filepath = tmp_results_directory / 'logistic_results.png'
+    tmp_img_rfc_filepath = tmp_results_directory / 'rf_results.png'
+    tmp_feature_importances_filepath = \
+        tmp_results_directory / 'feature_importances.png'
+    tmp_results_directory.mkdir(parents=True)
+    # Use monkeypatch to reset global variables during testing
+    monkeypatch.setattr(churn_library,
+                        "IMG_LRC_FILEPATH",
+                        tmp_img_lrc_filepath)
+    monkeypatch.setattr(churn_library,
+                        "IMG_RFC_FILEPATH",
+                        tmp_img_rfc_filepath)
+    monkeypatch.setattr(churn_library,
+                        "FEATURE_IMPORTANCES_FILEPATH",
+                        tmp_feature_importances_filepath)
+    monkeypatch.setattr(churn_library,
+                        "ROC_CURVE_FILEPATH",
+                        tmp_roc_curve_filepath)
+    # Set params grid to singleton (speed up test execution)
+    param_grid = {
+        'n_estimators': [200],
+        'max_features': ['auto'],
+        'max_depth' : [100],
+        'criterion' :['entropy']}
+    monkeypatch.setattr(churn_library, "RFC_PARAM_GRID", param_grid)
+    try:
+        train_models(data_split['x_train'],
+                     data_split['x_test'],
+                     data_split['y_train'],
+                     data_split['y_test'])
+        # Check that models directory has 2 models
+        model_files = {file for file in os.listdir(tmp_models_directory)
+                       if file.endswith('.pkl')}
+        expected_model_files = {'logistic_model.pkl', 'rfc_model.pkl'}
+        assert model_files == expected_model_files
+        file_logger.info('Model files - OKAY')
+    except AssertionError as err:
+        file_logger.error('Model files do not agree with expected results')
+        raise err
+
+    try:
+        # Check that models are of the class LogisticRegression and
+        # RandomForestClassifier
+        with open(tmp_lrc_model_filepath, 'rb') as file:
+            lrc_model = joblib.load(file)
+        assert isinstance(lrc_model, LogisticRegression)
+
+        with open(tmp_rfc_model_filepath, 'rb') as file:
+            rfc_model = joblib.load(file)
+        assert isinstance(rfc_model, RandomForestClassifier)
+        file_logger.info('Models instances - OKAY')
+    except AssertionError as err:
+        file_logger.error('Models instances are of unexpected class')
+        raise err
+
+    try:
+        # Check that expected images are in tmp_results_directory
+        expected_img_in_results_directory = {
+            'feature_importances.png',
+            'logistic_results.png',
+            'rf_results.png',
+            'roc_curve_result.png'
+        }
+        imgs_in_results_directory = {
+            file for file in os.listdir(tmp_results_directory)
+            if file.endswith(IMG_FILE_EXT)}
+        assert expected_img_in_results_directory == imgs_in_results_directory
+        file_logger.info('Images in images/results - OKAY')
+    except AssertionError as err:
+        file_logger.error('Unexpected images in results')
+        raise err
+    file_logger.info("Testing train_models - SUCCESS")
 
 
 if __name__ == "__main__":

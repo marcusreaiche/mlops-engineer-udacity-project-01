@@ -1,4 +1,3 @@
-# library doc string
 """
 This module completes the process for solving the data science process including:
 
@@ -11,8 +10,7 @@ This module completes the process for solving the data science process including
 Author: Marcus Reaiche
 Sep 7, 2023
 """
-
-# import libraries
+# Import libraries
 import os
 import logging
 import pandas as pd
@@ -37,7 +35,8 @@ from constants import (
     RFC_PARAM_GRID,
     RFC_CV,
     RFC_MODEL_FILEPATH,
-    FEATURE_IMPORTANCES_FILEPATH)
+    FEATURE_IMPORTANCES_FILEPATH,
+    ROC_CURVE_FILEPATH)
 from helpers import (
     create_eda_figs,
     save_figs,
@@ -108,9 +107,11 @@ def encoder_helper(data, category_lst, response=RESPONSE_COL):
     output:
             data: pandas dataframe with new columns for
     '''
+    # Do not change data frame in place
+    data = data.copy()
     for cat in category_lst:
         cat_group = data.groupby(cat)[response].mean()
-        data[cat + '_' + response] = data[cat].map(cat_group)
+        data.loc[:, cat + '_' + response] = data[cat].map(cat_group)
     return data
 
 
@@ -128,7 +129,9 @@ def perform_feature_engineering(data, response=RESPONSE_COL):
               y_test: y testing data
     '''
     # Create encoded columns
-    encoder_helper(data, category_lst=CATEGORICAL_COLS, response=response)
+    data = encoder_helper(data,
+                          category_lst=CATEGORICAL_COLS,
+                          response=response)
     # Set X and y
     features = data.loc[:, FEATURES_COLS]
     target = data[response]
@@ -239,7 +242,10 @@ def train_models(features_train, features_test, target_train, target_test):
     save_model(best_rfc, RFC_MODEL_FILEPATH)
     # Generate ROC curves
     logging.info('Generate ROC curves')
-    generate_roc_curves([best_rfc, lrc], features_test, target_test)
+    generate_roc_curves([best_rfc, lrc],
+                        features_test,
+                        target_test,
+                        ROC_CURVE_FILEPATH)
     # Generate classification reports images
     logging.info('Generate classification report images')
     classification_report_image(target_train,

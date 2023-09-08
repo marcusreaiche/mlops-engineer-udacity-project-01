@@ -35,7 +35,8 @@ from constants import (
     RFC_PARAM_GRID,
     RFC_CV,
     RFC_MODEL_FILEPATH,
-    FEATURE_IMPORTANCES_FILEPATH)
+    FEATURE_IMPORTANCES_FILEPATH,
+    ROC_CURVE_FILEPATH)
 from helpers import (
     create_eda_figs,
     save_figs,
@@ -241,7 +242,10 @@ def train_models(features_train, features_test, target_train, target_test):
     save_model(best_rfc, RFC_MODEL_FILEPATH)
     # Generate ROC curves
     logging.info('Generate ROC curves')
-    generate_roc_curves([best_rfc, lrc], features_test, target_test)
+    generate_roc_curves([best_rfc, lrc],
+                        features_test,
+                        target_test,
+                        ROC_CURVE_FILEPATH)
     # Generate classification reports images
     logging.info('Generate classification report images')
     classification_report_image(target_train,

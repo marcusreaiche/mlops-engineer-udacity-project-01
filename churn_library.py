@@ -262,11 +262,11 @@ def train_models(features_train, features_test, target_train, target_test):
 
 if __name__ == '__main__':
     logging.info('Import data')
-    data = import_data(pth=DATA_FILEPATH)
+    data_df = import_data(pth=DATA_FILEPATH)
     logging.info('Perform EDA')
-    perform_eda(data)
+    perform_eda(data_df)
     logging.info('Perform feature engineering')
-    features_train, features_test, target_train, target_test = \
-        perform_feature_engineering(data)
+    x_train, x_test, response_train, response_test = \
+        perform_feature_engineering(data_df)
     logging.info('Training models and saving models and plots to disk')
-    train_models(features_train, features_test, target_train, target_test)
+    train_models(x_train, x_test, response_train, response_test)

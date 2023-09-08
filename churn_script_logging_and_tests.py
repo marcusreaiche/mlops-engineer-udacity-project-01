@@ -1,3 +1,10 @@
+"""
+Implement unit tests for churn_library module
+
+Author: Marcus Reaiche
+Sep 8, 2023
+"""
+
 import os
 import numpy as np
 import pytest
@@ -24,18 +31,24 @@ from churn_library import (
 
 
 # Pytest fixtures
-@pytest.fixture(scope='module')
-def data_path():
+# Use kwarg name in @pytest.fixture to avoid pylint complaints
+# See stackoverflow and search for:
+# /questions/46089480/pytest-fixtures-redefining-name-from-outer-scope-pylint
+@pytest.fixture(scope='module', name='data_path')
+def fixture_data_path():
+    """data_path parameter for import_data"""
     return DATA_FILEPATH
 
 
-@pytest.fixture(scope='module')
-def data_before_eda(data_path):
+@pytest.fixture(scope='module', name='data_before_eda')
+def fixture_data_before_eda(data_path):
+    """data before EDA is done"""
     return import_data(data_path)
 
 
-@pytest.fixture(scope='module')
-def data_after_eda(data_before_eda):
+@pytest.fixture(scope='module', name='data_after_eda')
+def fixture_data_after_eda(data_before_eda):
+    """data after EDA is done"""
     return (
         data_before_eda
         .assign(Churn=lambda df: np.where(
@@ -44,24 +57,28 @@ def data_after_eda(data_before_eda):
             1)))
 
 
-@pytest.fixture(scope='module')
-def data_encoded(data_after_eda):
+@pytest.fixture(scope='module', name='data_encoded')
+def fixture_data_encoded(data_after_eda):
+    """data after categorical variables are encoded"""
     data = encoder_helper(data_after_eda, CATEGORICAL_COLS)
     return data
 
 
-@pytest.fixture(scope='module')
-def features(data_encoded):
+@pytest.fixture(scope='module', name='features')
+def fixture_features(data_encoded):
+    """data features or X"""
     return data_encoded.loc[:, FEATURES_COLS]
 
 
-@pytest.fixture(scope='module')
-def target(data_encoded):
+@pytest.fixture(scope='module', name='target')
+def fixtures_target(data_encoded):
+    """data target or y"""
     return data_encoded.loc[:, RESPONSE_COL]
 
 
-@pytest.fixture(scope='module')
-def data_split(features, target):
+@pytest.fixture(scope='module', name='data_split')
+def fixture_data_split(features, target):
+    """dictionary containing the data split in training and testing"""
     x_train, x_test, y_train, y_test = \
             train_test_split(features, target,
                              test_size=TEST_SIZE,
@@ -87,8 +104,9 @@ def test_import_data(data_path):
         assert data.shape[0] > 0
         assert data.shape[1] > 0
     except AssertionError as err:
-        file_logger.error("Testing import_data:" +
-                          " The file doesn't appear to have rows and columns")
+        log_msg = ("Testing import_data:" +
+                   " The file doesn't appear to have rows and columns")
+        file_logger.error(log_msg)
         raise err
     file_logger.info("Testing import_data: SUCCESS")
 
@@ -119,15 +137,15 @@ def test_perform_eda(data_before_eda, tmp_path, monkeypatch):
         raise err
     try:
         # Check that the five images were saved in the temporary directory
-        expected_images = set([
+        expected_images = {
             'total_transaction_distribution.png',
             'customer_age_distribution.png',
             'churn_distribution.png',
             'marital_status_distribution.png',
-            'heatmap.png'])
-        saved_images = set([
+            'heatmap.png'}
+        saved_images = {
             file for file in os.listdir(tmp_images_eda_directory)
-            if file.endswith(IMG_FILE_EXT)])
+            if file.endswith(IMG_FILE_EXT)}
         assert saved_images == expected_images
         file_logger.info('Expected image files were saved to disk')
     except AssertionError as err:
@@ -145,7 +163,8 @@ def test_encoder_helper(data_after_eda):
         data = encoder_helper(data_after_eda, CATEGORICAL_COLS)
         expected_cols = [col + '_' + RESPONSE_COL for col in CATEGORICAL_COLS]
         assert set(expected_cols).issubset(data.columns)
-        file_logger.info(f'Categorical cols {expected_cols} were created')
+        log_msg = f'Categorical cols {expected_cols} were created'
+        file_logger.info(log_msg)
     except AssertionError as err:
         file_logger.error('Some categorical cols were not created')
         raise err

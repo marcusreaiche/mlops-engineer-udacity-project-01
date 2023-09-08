@@ -1,12 +1,16 @@
 import os
 import numpy as np
 import pytest
+from sklearn.model_selection import train_test_split
 from file_logger import file_logger
 from constants import (
     DATA_FILEPATH,
     IMG_FILE_EXT,
     CATEGORICAL_COLS,
-    RESPONSE_COL)
+    RESPONSE_COL,
+    TEST_SIZE,
+    RANDOM_STATE,
+    FEATURES_COLS)
 import churn_library
 from churn_library import (
     import_data,
@@ -15,14 +19,17 @@ from churn_library import (
     encoder_helper,
     train_models)
 
+
 # Pytest fixtures
 @pytest.fixture(scope='module')
 def data_path():
     return DATA_FILEPATH
 
+
 @pytest.fixture(scope='module')
 def data_before_eda(data_path):
     return import_data(data_path)
+
 
 @pytest.fixture(scope='module')
 def data_after_eda(data_before_eda):
@@ -32,6 +39,23 @@ def data_after_eda(data_before_eda):
             df.Attrition_Flag == 'Existing Customer',
             0,
             1)))
+
+
+@pytest.fixture(scope='module')
+def data_encoded(data_after_eda):
+    data = encoder_helper(data_after_eda, CATEGORICAL_COLS)
+    return data
+
+
+@pytest.fixture(scope='module')
+def features(data_encoded):
+    return data_encoded.loc[:, FEATURES_COLS]
+
+
+@pytest.fixture(scope='module')
+def target(data_encoded):
+    return data_encoded.loc[:, RESPONSE_COL]
+
 
 def test_import_data(data_path):
     '''
@@ -52,6 +76,7 @@ def test_import_data(data_path):
                           " The file doesn't appear to have rows and columns")
         raise err
     file_logger.info("Testing import_data: SUCCESS")
+
 
 def test_perform_eda(data_before_eda, tmp_path, monkeypatch):
     '''
@@ -102,9 +127,9 @@ def test_encoder_helper(data_after_eda):
     '''
     file_logger.info('Test encoder_helper - START')
     try:
-        data_encoded = encoder_helper(data_after_eda, CATEGORICAL_COLS)
+        data = encoder_helper(data_after_eda, CATEGORICAL_COLS)
         expected_cols = [col + '_' + RESPONSE_COL for col in CATEGORICAL_COLS]
-        assert set(expected_cols).issubset(data_encoded.columns)
+        assert set(expected_cols).issubset(data.columns)
         file_logger.info(f'Categorical cols {expected_cols} were created')
     except AssertionError as err:
         file_logger.error('Some categorical cols were not created')
@@ -112,11 +137,26 @@ def test_encoder_helper(data_after_eda):
     file_logger.info('Test encoder_helper - SUCCESS')
 
 
-def test_perform_feature_engineering():
+def test_perform_feature_engineering(data_after_eda, features, target):
     '''
     Test perform_feature_engineering
     '''
-    raise NotImplementedError('Implement test_perform_feature_engineering')
+    file_logger.info('Testing perform_feature_engineering - START')
+    try:
+        x_train, x_test, y_train, y_test = \
+            perform_feature_engineering(data_after_eda)
+        x_train_expected, x_test_expected, y_train_expected, y_test_expected = \
+            train_test_split(features, target,
+                             test_size=TEST_SIZE,
+                             random_state=RANDOM_STATE)
+        assert (x_train.equals(x_train_expected) and
+                x_test.equals(x_test_expected) and
+                y_train.equals(y_train_expected) and
+                y_test.equals(y_test_expected))
+    except AssertionError as err:
+        file_logger.error('Split data do not agree')
+        raise err
+    file_logger.info('Test perform_feature_engineering - SUCCESS')
 
 
 def test_train_models():

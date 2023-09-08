@@ -2,7 +2,11 @@ import os
 import numpy as np
 import pytest
 from file_logger import file_logger
-from constants import DATA_FILEPATH, IMG_FILE_EXT
+from constants import (
+    DATA_FILEPATH,
+    IMG_FILE_EXT,
+    CATEGORICAL_COLS,
+    RESPONSE_COL)
 import churn_library
 from churn_library import (
     import_data,
@@ -17,17 +21,25 @@ def data_path():
     return DATA_FILEPATH
 
 @pytest.fixture(scope='module')
-def data_before_eda():
-    return import_data(DATA_FILEPATH)
+def data_before_eda(data_path):
+    return import_data(data_path)
 
+@pytest.fixture(scope='module')
+def data_after_eda(data_before_eda):
+    return (
+        data_before_eda
+        .assign(Churn=lambda df: np.where(
+            df.Attrition_Flag == 'Existing Customer',
+            0,
+            1)))
 
 def test_import_data(data_path):
     '''
     Test import data
     '''
+    file_logger.info("Testing import_data: START")
     try:
         data = import_data(data_path)
-        file_logger.info("Testing import_data: SUCCESS")
     except FileNotFoundError as err:
         file_logger.error("Testing import_data: The file wasn't found")
         raise err
@@ -39,13 +51,13 @@ def test_import_data(data_path):
         file_logger.error("Testing import_data:" +
                           " The file doesn't appear to have rows and columns")
         raise err
-
+    file_logger.info("Testing import_data: SUCCESS")
 
 def test_perform_eda(data_before_eda, tmp_path, monkeypatch):
     '''
     Test perform_eda function
     '''
-    file_logger.info('Testing perform_eda')
+    file_logger.info('Testing perform_eda - START')
     # Set temporary directory to save EDA files
     tmp_images_eda_directory = tmp_path / 'images' / 'eda'
     tmp_images_eda_directory.mkdir(parents=True)
@@ -77,18 +89,27 @@ def test_perform_eda(data_before_eda, tmp_path, monkeypatch):
             file for file in os.listdir(tmp_images_eda_directory)
             if file.endswith(IMG_FILE_EXT)])
         assert saved_images == expected_images
-        file_logger.error('Expected image files were saved to disk')
+        file_logger.info('Expected image files were saved to disk')
     except AssertionError as err:
         file_logger.error('Saved image files do not agree with expected images')
         raise err
     file_logger.info('Testing perform_eda - SUCCESS')
 
 
-def test_encoder_helper():
+def test_encoder_helper(data_after_eda):
     '''
     Test encoder helper
     '''
-    raise NotImplementedError('Implement test_encoder_helper')
+    file_logger.info('Test encoder_helper - START')
+    try:
+        data_encoded = encoder_helper(data_after_eda, CATEGORICAL_COLS)
+        expected_cols = [col + '_' + RESPONSE_COL for col in CATEGORICAL_COLS]
+        assert set(expected_cols).issubset(data_encoded.columns)
+        file_logger.info(f'Categorical cols {expected_cols} were created')
+    except AssertionError as err:
+        file_logger.error('Some categorical cols were not created')
+        raise err
+    file_logger.info('Test encoder_helper - SUCCESS')
 
 
 def test_perform_feature_engineering():

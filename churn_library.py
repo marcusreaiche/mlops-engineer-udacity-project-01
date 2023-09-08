@@ -1,4 +1,3 @@
-# library doc string
 """
 This module completes the process for solving the data science process including:
 
@@ -11,8 +10,7 @@ This module completes the process for solving the data science process including
 Author: Marcus Reaiche
 Sep 7, 2023
 """
-
-# import libraries
+# Import libraries
 import os
 import logging
 import pandas as pd
@@ -108,9 +106,11 @@ def encoder_helper(data, category_lst, response=RESPONSE_COL):
     output:
             data: pandas dataframe with new columns for
     '''
+    # Do not change data frame in place
+    data = data.copy()
     for cat in category_lst:
         cat_group = data.groupby(cat)[response].mean()
-        data[cat + '_' + response] = data[cat].map(cat_group)
+        data.loc[:, cat + '_' + response] = data[cat].map(cat_group)
     return data
 
 
@@ -128,7 +128,9 @@ def perform_feature_engineering(data, response=RESPONSE_COL):
               y_test: y testing data
     '''
     # Create encoded columns
-    encoder_helper(data, category_lst=CATEGORICAL_COLS, response=response)
+    data = encoder_helper(data,
+                          category_lst=CATEGORICAL_COLS,
+                          response=response)
     # Set X and y
     features = data.loc[:, FEATURES_COLS]
     target = data[response]

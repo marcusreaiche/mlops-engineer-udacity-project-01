@@ -105,7 +105,7 @@ This command will perform the following tasks:
 
 Execute in the CLI the following command:
 
->```bash
+```bash
 $ python churn_script_logging_and_test.py
 ```
 This command performs the unit tests defined in the script and will produce the log file located in ./log/churn_library.log

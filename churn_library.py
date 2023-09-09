@@ -21,7 +21,9 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier
 from constants import (
     DATA_FILEPATH,
+    MODELS_DIR,
     IMG_EDA_DIR,
+    IMG_RESULTS_DIR,
     IMG_LRC_FILEPATH,
     IMG_RFC_FILEPATH,
     CATEGORICAL_COLS,
@@ -38,6 +40,7 @@ from constants import (
     FEATURE_IMPORTANCES_FILEPATH,
     ROC_CURVE_FILEPATH)
 from helpers import (
+    create_dir,
     create_eda_figs,
     save_figs,
     _build_classification_report_image,
@@ -52,6 +55,7 @@ logging.basicConfig(
     level = logging.INFO,
     format='%(name)s - %(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__ + '_logger')
+
 
 def import_data(pth):
     '''
@@ -261,6 +265,10 @@ def train_models(features_train, features_test, target_train, target_test):
 
 
 if __name__ == '__main__':
+    logger.info('Create directories if they do not exist')
+    dirs_to_create = [MODELS_DIR, IMG_EDA_DIR, IMG_RESULTS_DIR]
+    for directory in dirs_to_create:
+        create_dir(directory)
     logger.info('Import data')
     data_df = import_data(pth=DATA_FILEPATH)
     logger.info('Perform EDA')

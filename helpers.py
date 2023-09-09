@@ -6,6 +6,7 @@ Implement auxiliary functions used in other parts of the Project.
 Author: Marcus Reaiche
 Sep 7, 2023
 """
+from pathlib import Path
 from os.path import join as joinpath
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -117,3 +118,18 @@ def generate_roc_curves(models_lst,
 def save_model(model, filepath):
     """Save model to disk"""
     joblib.dump(model, filepath)
+
+
+def create_dir(dirpath):
+    """
+    Create dirpath directory if it does not exist.
+
+    input:
+            dirpath: str
+
+    output:
+            None
+    """
+    dirpath = Path(dirpath)
+    if not dirpath.exists():
+        dirpath.mkdir(parents=True)

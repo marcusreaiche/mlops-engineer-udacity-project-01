@@ -80,7 +80,7 @@ Defines logger used in churn_script_logging_and_tests.
 Execute in the CLI the following command:
 
 ```bash
-> python churn_library.py
+$ python churn_library.py
 ```
 This command will perform the following tasks:
 - Load data set in memory
@@ -106,6 +106,6 @@ This command will perform the following tasks:
 Execute in the CLI the following command:
 
 >```bash
-> python churn_script_logging_and_test.py
+$ python churn_script_logging_and_test.py
 ```
 This command performs the unit tests defined in the script and will produce the log file located in ./log/churn_library.log
